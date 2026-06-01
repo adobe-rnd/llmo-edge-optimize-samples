@@ -39,10 +39,21 @@ function handler(event) {
     var TARGETED_PATHS = null;
 
     // ---------------------------------------------------------------
-    // Multi-domain (optional): when one distribution serves several
-    // domains, map each onboarded host to its Edge Optimize API key.
-    //   - Leave as null for a single domain (the API key is supplied as
-    //     a hardcoded origin custom header on EdgeOptimize_Origin).
+    // Multi-domain (optional): restrict Edge Optimize routing to the
+    // domains you are onboarding. When one distribution serves several
+    // domains and you onboard only some of them, list the onboarded
+    // hosts (lowercase) here — any other host skips Edge Optimize and
+    // is served from the default origin.
+    //   - Leave as null to route every host on the distribution.
+    //   - Otherwise: ['www.domain-a.com', 'www.domain-b.com']
+    // ---------------------------------------------------------------
+    var ONBOARDED_HOSTS = null;
+
+    // ---------------------------------------------------------------
+    // Multi-domain (optional): map each onboarded host (lowercase) to
+    // its Edge Optimize API key, when domains use different keys.
+    //   - Leave as null for a single key (supplied as a hardcoded
+    //     origin custom header on EdgeOptimize_Origin).
     //   - Otherwise: { 'www.domain-a.com': 'key-a', 'www.domain-b.com': 'key-b' }
     // ---------------------------------------------------------------
     var API_KEYS_BY_HOST = null;
@@ -81,6 +92,13 @@ function handler(event) {
     var isAgenticBot = AGENTIC_BOTS.some(function(bot) {
         return userAgent.includes(bot.toLowerCase());
     });
+
+    // ---------------------------------------------------------------
+    // Host gate (multi-domain): only route the onboarded hosts.
+    // If ONBOARDED_HOSTS is null, every host on the distribution is eligible.
+    // ---------------------------------------------------------------
+    var host = headers['host'] ? headers['host'].value.toLowerCase() : '';
+    var isOnboardedHost = ONBOARDED_HOSTS === null ? true : ONBOARDED_HOSTS.includes(host);
  
     // ---------------------------------------------------------------
     // Routing decision:
@@ -91,7 +109,7 @@ function handler(event) {
     //   3. Create an origin group that tries Edge Optimize first,
     //      with automatic failover to the default origin on errors
     // ---------------------------------------------------------------
-    if (!isEdgeOptimizeRequest && isAgenticBot && isTargetedPath) {
+    if (!isEdgeOptimizeRequest && isAgenticBot && isTargetedPath && isOnboardedHost) {
         // Pass the original URI to Edge Optimize so it knows which page to optimize
         request.headers['x-edgeoptimize-url'] = { value: request.uri };
  
@@ -102,17 +120,14 @@ function handler(event) {
         // single CloudFront distribution can serve several domains. For this to
         // take effect, remove any hardcoded x-forwarded-host origin custom header
         // on EdgeOptimize_Origin and include x-forwarded-host in the cache key.
-        if (headers['host'] && headers['host'].value) {
-            request.headers['x-forwarded-host'] = { value: headers['host'].value };
+        if (host) {
+            request.headers['x-forwarded-host'] = { value: host };
         }
 
         // Multi-domain: when API_KEYS_BY_HOST is configured, send this host's key.
         // Otherwise the API key is supplied as an origin custom header.
-        if (API_KEYS_BY_HOST && headers['host'] && headers['host'].value) {
-            var hostApiKey = API_KEYS_BY_HOST[headers['host'].value];
-            if (hostApiKey) {
-                request.headers['x-edgeoptimize-api-key'] = { value: hostApiKey };
-            }
+        if (API_KEYS_BY_HOST && API_KEYS_BY_HOST[host]) {
+            request.headers['x-edgeoptimize-api-key'] = { value: API_KEYS_BY_HOST[host] };
         }
 
         console.log("Adding origin group for userAgent: " + userAgent);
