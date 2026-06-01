@@ -37,6 +37,15 @@ function handler(event) {
     // ---------------------------------------------------------------
     var AGENTIC_BOTS = ['AdobeEdgeOptimize-AI', 'ChatGPT-User', 'GPTBot', 'OAI-SearchBot', 'PerplexityBot', 'Perplexity-User'];
     var TARGETED_PATHS = null;
+
+    // ---------------------------------------------------------------
+    // Multi-domain (optional): when one distribution serves several
+    // domains, map each onboarded host to its Edge Optimize API key.
+    //   - Leave as null for a single domain (the API key is supplied as
+    //     a hardcoded origin custom header on EdgeOptimize_Origin).
+    //   - Otherwise: { 'www.domain-a.com': 'key-a', 'www.domain-b.com': 'key-b' }
+    // ---------------------------------------------------------------
+    var API_KEYS_BY_HOST = null;
  
     // ---------------------------------------------------------------
     // Extract the User-Agent header (lowercase for case-insensitive matching)
@@ -87,8 +96,25 @@ function handler(event) {
         request.headers['x-edgeoptimize-url'] = { value: request.uri };
  
         // Enable LLM client optimization mode
-        request.headers['x-edgeoptimize-config'] = { value: "LLMCLIENT=true" };
+        request.headers['x-edgeoptimize-config'] = { value: "LLMCLIENT=TRUE;" };
  
+        // Multi-domain: identify the original domain from the Host header so a
+        // single CloudFront distribution can serve several domains. For this to
+        // take effect, remove any hardcoded x-forwarded-host origin custom header
+        // on EdgeOptimize_Origin and include x-forwarded-host in the cache key.
+        if (headers['host'] && headers['host'].value) {
+            request.headers['x-forwarded-host'] = { value: headers['host'].value };
+        }
+
+        // Multi-domain: when API_KEYS_BY_HOST is configured, send this host's key.
+        // Otherwise the API key is supplied as an origin custom header.
+        if (API_KEYS_BY_HOST && headers['host'] && headers['host'].value) {
+            var hostApiKey = API_KEYS_BY_HOST[headers['host'].value];
+            if (hostApiKey) {
+                request.headers['x-edgeoptimize-api-key'] = { value: hostApiKey };
+            }
+        }
+
         console.log("Adding origin group for userAgent: " + userAgent);
  
         // Create an origin group: try EdgeOptimize_Origin first,

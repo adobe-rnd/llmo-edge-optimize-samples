@@ -129,12 +129,14 @@ async function handleRequest(request, env, ctx) {
  * @param {URL} url - Parsed URL object
  */
 async function failoverToOrigin(request, env, url) {
-  // Build origin URL
-  const originURL = `${url.protocol}//${env.EDGE_OPTIMIZE_TARGET_HOST}${url.pathname}${url.search}`;
+  // Build origin URL. Fall back to the request host when EDGE_OPTIMIZE_TARGET_HOST
+  // is not set (required for multi-domain setups where the variable is omitted).
+  const originHost = env.EDGE_OPTIMIZE_TARGET_HOST ?? url.host;
+  const originURL = `${url.protocol}//${originHost}${url.pathname}${url.search}`;
 
   // Prepare headers - clean Edge Optimize headers and add loop protection
   const originHeaders = new Headers(request.headers);
-  originHeaders.set("Host", env.EDGE_OPTIMIZE_TARGET_HOST);
+  originHeaders.set("Host", originHost);
   originHeaders.delete("x-edgeoptimize-api-key");
   originHeaders.delete("x-edgeoptimize-url");
   originHeaders.delete("x-edgeoptimize-config");
