@@ -38,24 +38,12 @@ function handler(event) {
     var AGENTIC_BOTS = ['AdobeEdgeOptimize-AI', 'ChatGPT-User', 'GPTBot', 'OAI-SearchBot', 'PerplexityBot', 'Perplexity-User'];
     var TARGETED_PATHS = null;
 
-    // ---------------------------------------------------------------
-    // Multi-domain (optional): restrict Edge Optimize routing to the
-    // domains you are onboarding. When one distribution serves several
-    // domains and you onboard only some of them, list the onboarded
-    // hosts (lowercase) here — any other host skips Edge Optimize and
-    // is served from the default origin.
-    //   - Leave as null to route every host on the distribution.
-    //   - Otherwise: ['www.domain-a.com', 'www.domain-b.com']
-    // ---------------------------------------------------------------
+    // Multi-domain (optional): restrict routing to these hosts (lowercase).
+    // null = route every host. Example: ['www.domain-a.com', 'www.domain-b.com']
     var ADOBE_EO_ONBOARDED_HOSTS = null;
 
-    // ---------------------------------------------------------------
-    // Multi-domain (optional): map each onboarded host (lowercase) to
-    // its Edge Optimize API key, when domains use different keys.
-    //   - Leave as null for a single key (supplied as a hardcoded
-    //     origin custom header on EdgeOptimize_Origin).
-    //   - Otherwise: { 'www.domain-a.com': 'key-a', 'www.domain-b.com': 'key-b' }
-    // ---------------------------------------------------------------
+    // Multi-domain (optional): per-host API keys (lowercase hosts).
+    // null = single key via the origin custom header. Example: { 'www.domain-a.com': 'key-a' }
     var ADOBE_EO_API_KEYS_BY_HOST = null;
  
     // ---------------------------------------------------------------
@@ -93,10 +81,7 @@ function handler(event) {
         return userAgent.includes(bot.toLowerCase());
     });
 
-    // ---------------------------------------------------------------
-    // Host gate (multi-domain): only route the onboarded hosts.
-    // If ADOBE_EO_ONBOARDED_HOSTS is null, every host on the distribution is eligible.
-    // ---------------------------------------------------------------
+    // Multi-domain host gate (null = allow every host)
     var host = headers['host'] ? headers['host'].value.toLowerCase() : '';
     var isOnboardedHost = ADOBE_EO_ONBOARDED_HOSTS === null ? true : ADOBE_EO_ONBOARDED_HOSTS.includes(host);
  
@@ -116,13 +101,10 @@ function handler(event) {
         // Enable LLM client optimization mode
         request.headers['x-edgeoptimize-config'] = { value: "LLMCLIENT=TRUE;" };
  
-        // x-forwarded-host: the request's own host, so Edge Optimize knows which
-        // domain to serve (works for one or many domains). Must be in the cache
-        // policy (Step 3) for CloudFront to forward it to the origin.
+        // x-forwarded-host: the request host, so Edge Optimize knows the domain
         request.headers['x-forwarded-host'] = { value: host };
 
-        // Multi-domain: when ADOBE_EO_API_KEYS_BY_HOST is configured, send this host's key.
-        // Otherwise the API key is supplied as an origin custom header.
+        // Multi-domain: per-host API key (otherwise it comes from the origin custom header)
         if (ADOBE_EO_API_KEYS_BY_HOST && ADOBE_EO_API_KEYS_BY_HOST[host]) {
             request.headers['x-edgeoptimize-api-key'] = { value: ADOBE_EO_API_KEYS_BY_HOST[host] };
         }
