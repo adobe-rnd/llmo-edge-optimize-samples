@@ -88,10 +88,9 @@ async function handleRequest(request, env, ctx) {
     edgeOptimizeHeaders.delete("x-edgeoptimize-url");
     edgeOptimizeHeaders.delete("x-edgeoptimize-config");
 
-    // x-forwarded-host: the original site domain (per-domain for multi-domain).
-    // Use EDGE_OPTIMIZE_TARGET_HOST if set, otherwise the request host.
-    const forwardedHost = env.EDGE_OPTIMIZE_TARGET_HOST ?? url.host;
-    edgeOptimizeHeaders.set("x-forwarded-host", forwardedHost);
+    // x-forwarded-host: The original site domain
+    // Use environment variable if set, otherwise use the request host
+    edgeOptimizeHeaders.set("x-forwarded-host", env.EDGE_OPTIMIZE_TARGET_HOST ?? url.host);
 
     // x-edgeoptimize-api-key: per-host key if configured, otherwise the default.
     const apiKey = (API_KEYS_BY_HOST && API_KEYS_BY_HOST[host]) || env.EDGE_OPTIMIZE_API_KEY;
