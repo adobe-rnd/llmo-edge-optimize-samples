@@ -116,13 +116,10 @@ function handler(event) {
         // Enable LLM client optimization mode
         request.headers['x-edgeoptimize-config'] = { value: "LLMCLIENT=TRUE;" };
  
-        // Multi-domain: identify the original domain from the Host header so a
-        // single CloudFront distribution can serve several domains. For this to
-        // take effect, remove any hardcoded x-forwarded-host origin custom header
-        // on EdgeOptimize_Origin and include x-forwarded-host in the cache key.
-        if (host) {
-            request.headers['x-forwarded-host'] = { value: host };
-        }
+        // x-forwarded-host: the request's own host, so Edge Optimize knows which
+        // domain to serve (works for one or many domains). Must be in the cache
+        // policy (Step 3) for CloudFront to forward it to the origin.
+        request.headers['x-forwarded-host'] = { value: host };
 
         // Multi-domain: when API_KEYS_BY_HOST is configured, send this host's key.
         // Otherwise the API key is supplied as an origin custom header.
