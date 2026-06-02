@@ -111,9 +111,6 @@ async function handleRequest(request, env, ctx) {
       }), {
         cf: {
           cacheEverything: true, // Enable caching based on origin's cache-control headers
-          // Isolate cache per domain: the Edge Optimize URL is identical for every
-          // domain, so include the forwarded host in the cache key.
-          cacheKey: `${forwardedHost}${pathAndQuery}`,
         },
       });
 
