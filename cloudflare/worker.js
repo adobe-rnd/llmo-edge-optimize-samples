@@ -30,6 +30,16 @@ const TARGETED_PATHS = null; // e.g., ['/', '/page.html', '/products']
 const FAILOVER_ON_4XX = true; // Failover on any 4XX error (400-499)
 const FAILOVER_ON_5XX = true; // Failover on any 5XX error (500-599)
 
+// Multi-domain (optional)
+// ALLOWED_HOSTS: restrict routing to these hosts (lowercase), in addition to the
+//   worker's routes. null = route every host the routes match.
+//   e.g., ['www.domain-a.com', 'www.domain-b.com']
+const ALLOWED_HOSTS = null;
+// API_KEYS_BY_HOST: per-host API keys (lowercase hosts). null = use
+//   EDGE_OPTIMIZE_API_KEY for all hosts.
+//   e.g., { 'www.domain-a.com': 'key-a', 'www.domain-b.com': 'key-b' }
+const API_KEYS_BY_HOST = null;
+
 export default {
   async fetch(request, env, ctx) {
     return await handleRequest(request, env, ctx);
@@ -57,11 +67,15 @@ async function handleRequest(request, env, ctx) {
   // Check if user agent is an agentic bot
   const isAgenticBot = AGENTIC_BOTS.some((ua) => userAgent.includes(ua.toLowerCase()));
 
+  // Multi-domain: the request host, and whether it is onboarded
+  const host = url.host.toLowerCase();
+  const isAllowedHost = ALLOWED_HOSTS === null || ALLOWED_HOSTS.includes(host);
+
   // Route to Edge Optimize if:
   // 1. Request is NOT already from Edge Optimize (prevents infinite loops)
   // 2. User agent matches one of the agentic bots
   // 3. Path is targeted for optimization
-  if (!isEdgeOptimizeRequest && isAgenticBot && isTargetedPath) {
+  if (!isEdgeOptimizeRequest && isAgenticBot && isTargetedPath && isAllowedHost) {
 
     // Build the Edge Optimize request URL
     const edgeOptimizeURL = `https://live.edgeoptimize.net${pathAndQuery}`;
@@ -74,12 +88,14 @@ async function handleRequest(request, env, ctx) {
     edgeOptimizeHeaders.delete("x-edgeoptimize-url");
     edgeOptimizeHeaders.delete("x-edgeoptimize-config");
 
-    // x-forwarded-host: The original site domain
-    // Use environment variable if set, otherwise use the request host
-    edgeOptimizeHeaders.set("x-forwarded-host", env.EDGE_OPTIMIZE_TARGET_HOST ?? url.host);
+    // x-forwarded-host: the original site domain (per-domain for multi-domain).
+    // Use EDGE_OPTIMIZE_TARGET_HOST if set, otherwise the request host.
+    const forwardedHost = env.EDGE_OPTIMIZE_TARGET_HOST ?? url.host;
+    edgeOptimizeHeaders.set("x-forwarded-host", forwardedHost);
 
-    // x-edgeoptimize-api-key: Your Adobe-provided API key
-    edgeOptimizeHeaders.set("x-edgeoptimize-api-key", env.EDGE_OPTIMIZE_API_KEY);
+    // x-edgeoptimize-api-key: per-host key if configured, otherwise the default.
+    const apiKey = (API_KEYS_BY_HOST && API_KEYS_BY_HOST[host]) || env.EDGE_OPTIMIZE_API_KEY;
+    edgeOptimizeHeaders.set("x-edgeoptimize-api-key", apiKey);
 
     // x-edgeoptimize-url: The original request URL path and query
     edgeOptimizeHeaders.set("x-edgeoptimize-url", pathAndQuery);
@@ -95,6 +111,9 @@ async function handleRequest(request, env, ctx) {
       }), {
         cf: {
           cacheEverything: true, // Enable caching based on origin's cache-control headers
+          // Isolate cache per domain: the Edge Optimize URL is identical for every
+          // domain, so include the forwarded host in the cache key.
+          cacheKey: `${forwardedHost}${pathAndQuery}`,
         },
       });
 
