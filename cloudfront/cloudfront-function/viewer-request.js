@@ -47,7 +47,7 @@ function handler(event) {
     //   - Leave as null to route every host on the distribution.
     //   - Otherwise: ['www.domain-a.com', 'www.domain-b.com']
     // ---------------------------------------------------------------
-    var ONBOARDED_HOSTS = null;
+    var ADOBE_EO_ONBOARDED_HOSTS = null;
 
     // ---------------------------------------------------------------
     // Multi-domain (optional): map each onboarded host (lowercase) to
@@ -56,7 +56,7 @@ function handler(event) {
     //     origin custom header on EdgeOptimize_Origin).
     //   - Otherwise: { 'www.domain-a.com': 'key-a', 'www.domain-b.com': 'key-b' }
     // ---------------------------------------------------------------
-    var API_KEYS_BY_HOST = null;
+    var ADOBE_EO_API_KEYS_BY_HOST = null;
  
     // ---------------------------------------------------------------
     // Extract the User-Agent header (lowercase for case-insensitive matching)
@@ -95,10 +95,10 @@ function handler(event) {
 
     // ---------------------------------------------------------------
     // Host gate (multi-domain): only route the onboarded hosts.
-    // If ONBOARDED_HOSTS is null, every host on the distribution is eligible.
+    // If ADOBE_EO_ONBOARDED_HOSTS is null, every host on the distribution is eligible.
     // ---------------------------------------------------------------
     var host = headers['host'] ? headers['host'].value.toLowerCase() : '';
-    var isOnboardedHost = ONBOARDED_HOSTS === null ? true : ONBOARDED_HOSTS.includes(host);
+    var isOnboardedHost = ADOBE_EO_ONBOARDED_HOSTS === null ? true : ADOBE_EO_ONBOARDED_HOSTS.includes(host);
  
     // ---------------------------------------------------------------
     // Routing decision:
@@ -121,10 +121,10 @@ function handler(event) {
         // policy (Step 3) for CloudFront to forward it to the origin.
         request.headers['x-forwarded-host'] = { value: host };
 
-        // Multi-domain: when API_KEYS_BY_HOST is configured, send this host's key.
+        // Multi-domain: when ADOBE_EO_API_KEYS_BY_HOST is configured, send this host's key.
         // Otherwise the API key is supplied as an origin custom header.
-        if (API_KEYS_BY_HOST && API_KEYS_BY_HOST[host]) {
-            request.headers['x-edgeoptimize-api-key'] = { value: API_KEYS_BY_HOST[host] };
+        if (ADOBE_EO_API_KEYS_BY_HOST && ADOBE_EO_API_KEYS_BY_HOST[host]) {
+            request.headers['x-edgeoptimize-api-key'] = { value: ADOBE_EO_API_KEYS_BY_HOST[host] };
         }
 
         console.log("Adding origin group for userAgent: " + userAgent);
