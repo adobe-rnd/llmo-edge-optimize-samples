@@ -99,10 +99,10 @@ function handler(event) {
  
         console.log("Adding origin group for userAgent: " + userAgent);
  
-        // Create an origin group: try EdgeOptimize_Origin first, fall back to
-        // YOUR_DEFAULT_ORIGIN if Edge Optimize returns any of the listed errors.
-        // If you reuse this function across distributions, set these origin IDs
-        // to match each distribution's Edge Optimize and default origins.
+        // Create an origin group: try EdgeOptimize_Origin first,
+        // fall back to YOUR_DEFAULT_ORIGIN if Edge Optimize returns
+        // any of the listed error status codes.
+        // If you reuse this function across distributions, set these origin IDs as per domain.
         cf.createRequestOriginGroup({
             "originIds": [
                 { "originId": "EdgeOptimize_Origin" },
