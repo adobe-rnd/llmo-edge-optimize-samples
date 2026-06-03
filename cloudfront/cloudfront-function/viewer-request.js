@@ -41,10 +41,6 @@ function handler(event) {
     // Multi-domain (optional): restrict routing to these hosts (lowercase).
     // null = route every host. Example: ['www.domain-a.com', 'www.domain-b.com']
     var ADOBE_EO_ONBOARDED_HOSTS = null;
-
-    // Multi-domain (optional): per-host API keys (lowercase hosts).
-    // null = single key via the origin custom header. Example: { 'www.domain-a.com': 'key-a' }
-    var ADOBE_EO_API_KEYS_BY_HOST = null;
  
     // ---------------------------------------------------------------
     // Extract the User-Agent header (lowercase for case-insensitive matching)
@@ -101,19 +97,12 @@ function handler(event) {
         // Enable LLM client optimization mode
         request.headers['x-edgeoptimize-config'] = { value: "LLMCLIENT=TRUE;" };
  
-        // x-forwarded-host: the request host, so Edge Optimize knows the domain
-        request.headers['x-forwarded-host'] = { value: host };
-
-        // Multi-domain: per-host API key (otherwise it comes from the origin custom header)
-        if (ADOBE_EO_API_KEYS_BY_HOST && ADOBE_EO_API_KEYS_BY_HOST[host]) {
-            request.headers['x-edgeoptimize-api-key'] = { value: ADOBE_EO_API_KEYS_BY_HOST[host] };
-        }
-
         console.log("Adding origin group for userAgent: " + userAgent);
  
-        // Create an origin group: try EdgeOptimize_Origin first,
-        // fall back to YOUR_DEFAULT_ORIGIN if Edge Optimize returns
-        // any of the listed error status codes.
+        // Create an origin group: try EdgeOptimize_Origin first, fall back to
+        // YOUR_DEFAULT_ORIGIN if Edge Optimize returns any of the listed errors.
+        // If you reuse this function across distributions, set these origin IDs
+        // to match each distribution's Edge Optimize and default origins.
         cf.createRequestOriginGroup({
             "originIds": [
                 { "originId": "EdgeOptimize_Origin" },
