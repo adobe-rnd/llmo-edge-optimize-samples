@@ -40,12 +40,12 @@ Both samples ship with the following default bot list (easily configurable):
 | Bot | User-Agent String |
 |-----|-------------------|
 | Adobe Edge Optimize Test | `AdobeEdgeOptimize-AI` |
-| ChatGPT (browsing) | `ChatGPT-User` |
-| GPTBot (crawler) | `GPTBot` |
-| OpenAI Search | `OAI-SearchBot` |
+| OpenAI (browsing) | `ChatGPT-User` |
+| OpenAI (crawler) | `GPTBot` |
+| OpenAI (search) | `OAI-SearchBot` |
 | Perplexity (crawler) | `PerplexityBot` |
 | Perplexity (browsing) | `Perplexity-User` |
-| ClaudeBot (crawler) | `ClaudeBot` |
+| Claude (crawler) | `ClaudeBot` |
 | Claude (browsing) | `Claude-User` |
 | Claude (search) | `Claude-SearchBot` |
 
