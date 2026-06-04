@@ -41,13 +41,13 @@ Both samples ship with the following default bot list (easily configurable):
 |-----|-------------------|
 | Adobe Edge Optimize Test | `AdobeEdgeOptimize-AI` |
 | ChatGPT (browsing) | `ChatGPT-User` |
-| Claude (search) | `Claude-SearchBot` |
-| Claude (browsing) | `Claude-User` |
-| ClaudeBot (crawler) | `ClaudeBot` |
 | GPTBot (crawler) | `GPTBot` |
 | OpenAI Search | `OAI-SearchBot` |
 | Perplexity (crawler) | `PerplexityBot` |
 | Perplexity (browsing) | `Perplexity-User` |
+| ClaudeBot (crawler) | `ClaudeBot` |
+| Claude (browsing) | `Claude-User` |
+| Claude (search) | `Claude-SearchBot` |
 
 ## CDN Implementations
 
