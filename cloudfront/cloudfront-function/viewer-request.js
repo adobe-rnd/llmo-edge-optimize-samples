@@ -35,7 +35,7 @@ function handler(event) {
     //   - Set to an array of specific paths to limit routing,
     //     e.g., ['/', '/products', '/about']
     // ---------------------------------------------------------------
-    var AGENTIC_BOTS = ['AdobeEdgeOptimize-AI', 'ChatGPT-User', 'GPTBot', 'OAI-SearchBot', 'PerplexityBot', 'Perplexity-User'];
+    var AGENTIC_BOTS = ['AdobeEdgeOptimize-AI', 'ChatGPT-User', 'Claude-SearchBot', 'Claude-User', 'ClaudeBot', 'GPTBot', 'OAI-SearchBot', 'PerplexityBot', 'Perplexity-User'];
     var TARGETED_PATHS = null;
  
     // ---------------------------------------------------------------

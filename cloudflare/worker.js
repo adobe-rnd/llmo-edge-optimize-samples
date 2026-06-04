@@ -15,6 +15,9 @@
 const AGENTIC_BOTS = [
   'AdobeEdgeOptimize-AI',
   'ChatGPT-User',
+  'Claude-SearchBot',
+  'Claude-User',
+  'ClaudeBot',
   'GPTBot',
   'OAI-SearchBot',
   'PerplexityBot',
