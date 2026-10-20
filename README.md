@@ -1,3 +1,5 @@
+# Moved to https://github.com/adobe/llmo-code-samples
+
 # Adobe LLM Optimizer - Optimize at Edge — BYOCDN Samples
 
 Sample edge worker implementations for [Adobe LLM Optimizer - Optimize at Edge](https://experienceleague.adobe.com/en/docs/llm-optimizer/using/resources/optimize-at-edge) **Bring Your Own CDN (BYOCDN)** integration. These samples show how to route agentic bot traffic (AI/LLM user agents) through your existing CDN to the Edge Optimize backend for optimized content delivery.
